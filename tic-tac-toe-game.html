@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badass Tic Tac Toe</title>
+    <style>
+        :root {
+            --primary-color: #FF5722;
+            --secondary-color: #2196F3;
+            --dark-bg: #121212;
+            --light-bg: #1E1E1E;
+            --text-color: #E0E0E0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .game-title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 87, 34, 0.7), 0 0 20px rgba(255, 87, 34, 0.5);
+            color: var(--primary-color);
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(255, 87, 34, 0.7), 0 0 20px rgba(255, 87, 34, 0.5);
+            }
+            to {
+                text-shadow: 0 0 15px rgba(255, 87, 34, 0.9), 0 0 30px rgba(255, 87, 34, 0.7);
+            }
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            min-height: 30px;
+        }
+
+        .current-player {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: var(--light-bg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .x-turn {
+            color: var(--primary-color);
+        }
+
+        .o-turn {
+            color: var(--secondary-color);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin: 0 auto;
+            max-width: 400px;
+            background-color: var(--light-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            background-color: var(--dark-bg);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 3rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .cell.x::before, .cell.x::after {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 10px;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .cell.x::before {
+            transform: rotate(45deg);
+        }
+
+        .cell.x::after {
+            transform: rotate(-45deg);
+        }
+
+        .cell.o::before {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 70%;
+            border: 10px solid var(--secondary-color);
+            border-radius: 50%;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px var(--secondary-color);
+        }
+
+        .win-line {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+        }
+
+        .horizontal {
+            height: 10px;
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        .vertical {
+            width: 10px;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .diagonal-1 {
+            height: 10px;
+            width: 140%;
+            transform: rotate(45deg);
+            border-radius: 5px;
+        }
+
+        .diagonal-2 {
+            height: 10px;
+            width: 140%;
+            transform: rotate(-45deg);
+            border-radius: 5px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .restart {
+            background-color: var(--primary-color);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: var(--light-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .score {
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        .score-x {
+            color: var(--primary-color);
+        }
+
+        .score-o {
+            color: var(--secondary-color);
+        }
+
+        .score-draws {
+            color: #9E9E9E;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background-color: var(--primary-color);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: fall linear infinite;
+        }
+
+        .particle:nth-child(even) {
+            background-color: var(--secondary-color);
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(calc(100vh + 100px)) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .win-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .win-message.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .win-content {
+            text-align: center;
+            padding: 40px;
+            background-color: var(--light-bg);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            transform: scale(0.8);
+            transition: transform 0.5s ease;
+        }
+
+        .win-message.active .win-content {
+            transform: scale(1);
+        }
+
+        .win-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .win-x {
+            color: var(--primary-color);
+        }
+
+        .win-o {
+            color: var(--secondary-color);
+        }
+
+        .win-draw {
+            color: #9E9E9E;
+        }
+
+        .win-button {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            background-color: var(--primary-color);
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .board {
+                max-width: 300px;
+            }
+            
+            .cell {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1 class="game-title">Tic Tac Toe</h1>
+        
+        <div class="score-board">
+            <div class="score score-x">
+                <div>Player X</div>
+                <div class="score-value" id="score-x">0</div>
+            </div>
+            <div class="score score-draws">
+                <div>Draws</div>
+                <div class="score-value" id="score-draws">0</div>
+            </div>
+            <div class="score score-o">
+                <div>Player O</div>
+                <div class="score-value" id="score-o">0</div>
+            </div>
+        </div>
+        
+        <div class="status">
+            <div class="current-player x-turn" id="status">Player X's Turn</div>
+        </div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="restart" id="restart-btn">Restart Game</button>
+            <button id="reset-score-btn">Reset Score</button>
+        </div>
+    </div>
+    
+    <div class="win-message" id="win-message">
+        <div class="win-content">
+            <h2 class="win-title" id="win-title">Player X Wins!</h2>
+            <button class="win-button" id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game state
+            let currentPlayer = 'x';
+            let gameBoard = ['', '', '', '', '', '', '', '', ''];
+            let gameActive = true;
+            let scores = {
+                x: 0,
+                o: 0,
+                draws: 0
+            };
+            
+            // DOM elements
+            const board = document.getElementById('board');
+            const cells = document.querySelectorAll('.cell');
+            const statusText = document.getElementById('status');
+            const restartBtn = document.getElementById('restart-btn');
+            const resetScoreBtn = document.getElementById('reset-score-btn');
+            const scoreX = document.getElementById('score-x');
+            const scoreO = document.getElementById('score-o');
+            const scoreDraws = document.getElementById('score-draws');
+            const winMessage = document.getElementById('win-message');
+            const winTitle = document.getElementById('win-title');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const particlesContainer = document.getElementById('particles');
+
+            // Winning conditions
+            const winConditions = [
+                [0, 1, 2], // top row
+                [3, 4, 5], // middle row
+                [6, 7, 8], // bottom row
+                [0, 3, 6], // left column
+                [1, 4, 7], // middle column
+                [2, 5, 8], // right column
+                [0, 4, 8], // diagonal \
+                [2, 4, 6]  // diagonal /
+            ];
+
+            // Initialize the game
+            initGame();
+            createParticles();
+
+            // Event Listeners
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => handleCellClick(cell));
+            });
+            
+            restartBtn.addEventListener('click', restartGame);
+            resetScoreBtn.addEventListener('click', resetScore);
+            playAgainBtn.addEventListener('click', closeWinMessage);
+
+            // Functions
+            function initGame() {
+                gameBoard = ['', '', '', '', '', '', '', '', ''];
+                gameActive = true;
+                currentPlayer = 'x';
+                updateStatus();
+                
+                cells.forEach(cell => {
+                    cell.className = 'cell';
+                    cell.style.transform = "scale(0)";
+                    setTimeout(() => {
+                        cell.style.transform = "scale(1)";
+                    }, 50 * parseInt(cell.dataset.index));
+                });
+                
+                // Remove any win lines
+                const existingLines = document.querySelectorAll('.win-line');
+                existingLines.forEach(line => line.remove());
+            }
+
+            function handleCellClick(cell) {
+                const index = cell.dataset.index;
+                
+                if (gameBoard[index] !== '' || !gameActive) {
+                    return;
+                }
+                
+                gameBoard[index] = currentPlayer;
+                cell.classList.add(currentPlayer);
+                
+                // Add click effect
+                cell.style.transform = "scale(0.9)";
+                setTimeout(() => {
+                    cell.style.transform = "scale(1)";
+                }, 150);
+
+                // Add sound effect
+                playSound(currentPlayer);
+                
+                // Check for win or draw
+                if (checkWin()) {
+                    gameActive = false;
+                    updateScore(currentPlayer);
+                    showWinMessage(`Player ${currentPlayer.toUpperCase()} Wins!`, currentPlayer);
+                    return;
+                }
+                
+                if (checkDraw()) {
+                    gameActive = false;
+                    updateScore('draws');
+                    showWinMessage("It's a Draw!", 'draw');
+                    return;
+                }
+                
+                // Switch player
+                currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
+                updateStatus();
+            }
+
+            function updateStatus() {
+                statusText.textContent = `Player ${currentPlayer.toUpperCase()}'s Turn`;
+                statusText.className = `current-player ${currentPlayer}-turn`;
+            }
+
+            function checkWin() {
+                for (let i = 0; i < winConditions.length; i++) {
+                    const [a, b, c] = winConditions[i];
+                    if (
+                        gameBoard[a] !== '' &&
+                        gameBoard[a] === gameBoard[b] &&
+                        gameBoard[a] === gameBoard[c]
+                    ) {
+                        // Draw the win line
+                        drawWinLine(i, a, c);
+                        
+                        // Highlight winning cells
+                        cells[a].style.transform = "scale(1.1)";
+                        cells[b].style.transform = "scale(1.1)";
+                        cells[c].style.transform = "scale(1.1)";
+                        
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function drawWinLine(index, start, end) {
+                const line = document.createElement('div');
+                line.classList.add('win-line');
+                
+                // Position line based on which win condition triggered
+                if (index < 3) {
+                    // Horizontal lines
+                    line.classList.add('horizontal');
+                    line.style.top = `${33.33 * index + 16.67}%`;
+                } else if (index < 6) {
+                    // Vertical lines
+                    line.classList.add('vertical');
+                    line.style.left = `${33.33 * (index - 3) + 16.67}%`;
+                } else if (index === 6) {
+                    // Diagonal \
+                    line.classList.add('diagonal-1');
+                    line.style.top = '50%';
+                    line.style.left = '50%';
+                    line.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+                } else {
+                    // Diagonal /
+                    line.classList.add('diagonal-2');
+                    line.style.top = '50%';
+                    line.style.left = '50%';
+                    line.style.transform = 'translate(-50%, -50%) rotate(-45deg)';
+                }
+                
+                board.appendChild(line);
+                
+                // Animate the line
+                line.style.width = '0%';
+                if (index >= 3 && index < 6) {
+                    line.style.height = '0%';
+                }
+                
+                setTimeout(() => {
+                    if (index >= 3 && index < 6) {
+                        line.style.height = '100%';
+                    } else {
+                        line.style.width = index < 6 ? '100%' : '140%';
+                    }
+                }, 50);
+            }
+
+            function checkDraw() {
+                return !gameBoard.includes('');
+            }
+
+            function updateScore(winner) {
+                scores[winner]++;
+                scoreX.textContent = scores.x;
+                scoreO.textContent = scores.o;
+                scoreDraws.textContent = scores.draws;
+                
+                // Animate the score change
+                const scoreElement = winner === 'x' ? scoreX : 
+                                     winner === 'o' ? scoreO : scoreDraws;
+                                     
+                scoreElement.style.transform = "scale(1.5)";
+                setTimeout(() => {
+                    scoreElement.style.transform = "scale(1)";
+                }, 300);
+            }
+
+            function restartGame() {
+                initGame();
+            }
+
+            function resetScore() {
+                scores = { x: 0, o: 0, draws: 0 };
+                scoreX.textContent = "0";
+                scoreO.textContent = "0";
+                scoreDraws.textContent = "0";
+                restartGame();
+            }
+
+            function showWinMessage(message, winner) {
+                winTitle.textContent = message;
+                winTitle.className = `win-title win-${winner}`;
+                winMessage.classList.add('active');
+                
+                // Create fireworks if someone wins
+                if (winner !== 'draw') {
+                    createFireworks(winner);
+                }
+            }
+
+            function closeWinMessage() {
+                winMessage.classList.remove('active');
+                restartGame();
+            }
+
+            function createParticles() {
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    
+                    // Random position
+                    const posX = Math.random() * window.innerWidth;
+                    particle.style.left = `${posX}px`;
+                    
+                    // Random size
+                    const size = Math.random() * 5 + 2;
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    
+                    // Random duration
+                    const duration = Math.random() * 10 + 10;
+                    particle.style.animationDuration = `${duration}s`;
+                    
+                    // Random delay
+                    const delay = Math.random() * 10;
+                    particle.style.animationDelay = `${delay}s`;
+                    
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            function createFireworks(winner) {
+                const color = winner === 'x' ? 'var(--primary-color)' : 'var(--secondary-color)';
+                
+                for (let i = 0; i < 100; i++) {
+                    setTimeout(() => {
+                        const firework = document.createElement('div');
+                        firework.style.position = 'absolute';
+                        firework.style.width = '5px';
+                        firework.style.height = '5px';
+                        firework.style.borderRadius = '50%';
+                        firework.style.backgroundColor = color;
+                        firework.style.boxShadow = `0 0 10px ${color}`;
+                        
+                        // Random position
+                        const posX = Math.random() * window.innerWidth;
+                        const posY = Math.random() * window.innerHeight;
+                        firework.style.left = `${posX}px`;
+                        firework.style.top = `${posY}px`;
+                        
+                        // Animation
+                        firework.style.animation = 'firework 1s forwards';
+                        
+                        // Add keyframes dynamically
+                        const style = document.createElement('style');
+                        const angle = Math.random() * 360;
+                        const distance = Math.random() * 100 + 50;
+                        style.innerHTML = `
+                            @keyframes firework {
+                                0% {
+                                    transform: translate(0, 0) scale(1);
+                                    opacity: 1;
+                                }
+                                100% {
+                                    transform: translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0);
+                                    opacity: 0;
+                                }
+                            }
+                        `;
+                        
+                        document.head.appendChild(style);
+                        document.body.appendChild(firework);
+                        
+                        // Remove after animation
+                        setTimeout(() => {
+                            firework.remove();
+                            style.remove();
+                        }, 1000);
+                    }, Math.random() * 1000);
+                }
+            }
+
+            function playSound(player) {
+                // Create audio context
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create oscillator
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                // Set type and frequency based on player
+                oscillator.type = player === 'x' ? 'square' : 'sine';
+                oscillator.frequency.setValueAtTime(
+                    player === 'x' ? 440 : 660, 
+                    audioCtx.currentTime
+                );
+                
+                // Set volume curve
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                
+                // Connect nodes
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Play and stop
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            }
+        });
+    </script>
+</body>
+</html>
